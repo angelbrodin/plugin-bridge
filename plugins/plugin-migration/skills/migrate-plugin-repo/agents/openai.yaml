@@ -1,0 +1,4 @@
+interface:
+  display_name: "Migrate plugin repository"
+  short_description: "Apply the migration plan or selected changes"
+  default_prompt: "Use $migrate-plugin-repo to apply my reviewed migration plan or selected plugins and change IDs, preserve shared workflows, and report what remains."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit plugin repository"
+  short_description: "Review plugins and prepare a migration plan"
+  default_prompt: "Use $audit-plugin-repo to audit this repository for Codex, preserve Claude support, and prepare a migration plan with selectable plugins and change IDs."

@@ -1,0 +1,18 @@
+{
+  "name": "plugin-migration",
+  "version": "0.2.0",
+  "description": "Audit plugin repositories and apply reviewed Codex migration changes while preserving shared workflows.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Plugin Bridge",
+    "shortDescription": "Audit plugins and apply selected migration changes.",
+    "longDescription": "Review plugin migration issues, prepare an actionable plan, and apply the whole plan or selected plugins and changes while preserving shared workflows.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Audit this plugin repository for Codex, preserve Claude support, and prepare a migration plan I can apply in full or by plugin or change."
+  }
+}
