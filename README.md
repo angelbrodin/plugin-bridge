@@ -13,8 +13,13 @@ The audit produces a plan grouped by plugin, including proposed fixes, prepared 
 - Proceed with the migration plan.
 - Apply the GitHub changes only.
 - Apply M001 and M003; leave the other changes for later.
+- Generate a separate Codex package for GitHub only, preserving the Claude source.
 
 Codex prepares the selected changes, checks dependencies and file freshness, and reports what it applied and what still needs testing. The plugin's two skill files are under [plugins/plugin-migration/skills](plugins/plugin-migration/skills). Its helper scripts require Python 3.9 or later.
+
+Selective changes remain the default. A generated package is optional when separate client files are useful. Both can live in one maintained repository, with the marketplace manifests and paths each client requires.
+
+The audit lists inventoried files and skipped paths. The reviewed handoff explains what stays unchanged, what was copied or modified, and what still needs a decision, setup or testing. Detailed recipes cover agents, skill metadata, MCP launch settings and credentials.
 
 ## Prototype status
 

@@ -34,3 +34,7 @@ An import gap means the known path cannot transfer a component as configured. It
 Verify target version, route, active component and the complete condition. Literal text may be an example, a prohibition or a Claude-only branch. Scanner branch detection is heuristic; re-read the Markdown. Authentication and OAuth refresh require separate evidence.
 
 New rules need primary sources, explicit versions/routes and positive and negative tests. Do not generalize alpha behavior to future releases by comparing version numbers.
+
+## Conversion review candidates
+
+`REVIEW001` locates Claude plugin manifests; `REVIEW002` locates potential Markdown agents; `REVIEW003` flags selected frontmatter fields lexically; `REVIEW004` locates top-level user-input declarations; `REVIEW005` flags process/environment settings in native MCP candidates. All are `review_required`, with no verified target version attached. They add review coverage, not assertions of incompatibility or automatic field translations. See [conversion recipes](conversion-recipes.md). The original pinned import checks retain their existing scope.

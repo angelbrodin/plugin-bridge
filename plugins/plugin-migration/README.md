@@ -33,11 +33,19 @@ The scripted pass inspects common MCP and hook JSON configuration, skill discove
 
 The selection helper checks plugin scope, dependencies, shared effects and conflicting edits. The apply helper checks file freshness and exact edit matches, previews by default and records an application receipt. It does not choose fixes automatically or prove they work.
 
-Broader metadata, agents, policies, custom manifest paths and runtime behavior require contextual review. The scanner reports these limits. See [scope and sources](references/scope-and-rules.md), [migration plans and selections](references/migration-plan.md), [exact change plans](references/change-plans.md) and [validation](references/validation.md).
+The scanner also flags agent definitions, selected skill metadata, user-input declarations and native MCP launch settings for contextual review. These candidates do not establish incompatibility. Every inventoried file and skipped path has a coverage row; excluded directory contents remain outside the scan. Full metadata semantics, policies, custom manifest paths and runtime behavior still require contextual review. The scanner reports these limits. See [scope and sources](references/scope-and-rules.md), [migration plans and selections](references/migration-plan.md), [exact change plans](references/change-plans.md) and [validation](references/validation.md).
+
+You can also say:
+
+> Generate a separate Codex package for GitHub only. Leave the Claude source unchanged.
+
+This uses the same review and selection workflow. It is an agent-guided option, not an unattended converter. See [conversion recipes](references/conversion-recipes.md), [package output](references/package-output.md) and [file accounting and setup](references/file-accounting.md).
+
+The handoff accounts for source files, output files, unresolved decisions and remaining setup. Package creation, installation and runtime tests are reported separately.
 
 ## Maintaining both clients
 
-Preserve shared instructions and scripts when possible. Adapt only client-specific behavior. If separate packages are required, generate them from shared source and include the intended entry in each package. Check the installed result.
+Preserve shared instructions and scripts when possible. Adapt only client-specific behavior. If separate packages are required, generate them from shared source and include the intended entry in each package. A single repository can supply both clients, with the marketplace manifests and source paths each requires. This does not guarantee a single identical marketplace manifest works in both. Check the installed result.
 
 Native Codex supports async command hooks. The known standalone-import gap for `async: true` is distinct from native hook support and from direct plugin installation.
 

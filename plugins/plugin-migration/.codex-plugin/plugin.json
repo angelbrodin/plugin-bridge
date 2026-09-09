@@ -1,6 +1,6 @@
 {
   "name": "plugin-migration",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Audit plugin repositories and apply reviewed Codex migration changes while preserving shared workflows.",
   "author": {
     "name": "Local developer"

@@ -125,6 +125,10 @@ class Auditor:
         if rule in {"SKILL001", "SKILL002"}:
             scope.update(scope_kind="runtime-tool-interface", verified_install_path=None,
                          install_path_matches=None, recognized_import_file=None)
+        elif rule.startswith("REVIEW"):
+            scope.update(scope_kind="conversion-review", verified_version=None,
+                         target_version_verified=None, verified_install_path=None,
+                         install_path_matches=None, recognized_import_file=None)
         elif rule == "CONFIG001":
             scope.update(scope_kind="json-syntax", verified_version=None,
                          target_version_verified=None, verified_install_path=None,
@@ -365,6 +369,74 @@ class Auditor:
                 verified_conversion_paths=["legacy-plugin-command-conversion"],
                 install_path_matches=False if self.route == "standalone-import" else None)
 
+    def conversion_review(self, data=None):
+        """Locate conversion work; these observations never assert incompatibility."""
+        path = Path(self.path)
+        config_doc = "https://learn.chatgpt.com/docs/config-file/config-reference"
+        if path.name == "plugin.json" and path.parent.name == ".claude-plugin":
+            self.add("REVIEW001", "Review plugin packaging and distribution",
+                     "A Claude plugin manifest is present. Its active components and target package need review.",
+                     "Keep shared source where practical; use the generated-package workflow when a separate layout is required. Verify the target manifest and marketplace route.",
+                     SOURCE + "core-plugins/src/manifest.rs", status="review_required")
+        if path.suffix.lower() == ".md" and "agents" in path.parts and path.name.lower() != "skill.md":
+            self.add("REVIEW002", "Review agent definition and dependencies",
+                     "A Markdown file under an agents directory may define a client-specific agent. Presence alone does not prove it is active.",
+                     "Confirm the agent is selected, then review metadata, instructions, models, permissions, MCP ownership and skill activation using the agent conversion recipe.",
+                     SOURCE + "agent-roles/src/agent_role_config.rs", status="review_required")
+        if path.name.lower() == "skill.md":
+            normalized = self.raw.replace("\r\n", "\n")
+            if normalized.startswith("---\n"):
+                end = re.search(r"(?m)^---\s*$", normalized[4:])
+                if end:
+                    front = normalized[4:4 + end.start()]
+                    fields = r"disable-model-invocation|trigger|user-invocable|user_invocable|argument-hint|arguments|model|allowed-tools|tags|skills|context|agent"
+                    match = re.search(r"(?m)^(?:" + fields + r")\s*:", front)
+                    if match:
+                        self.add("REVIEW003", "Review skill metadata semantics",
+                                 "The frontmatter contains a field that needs client-specific interpretation. This lexical check does not parse YAML or establish a behavior mismatch.",
+                                 "Parse the complete frontmatter and apply the metadata recipe for the target version. Preserve invocation, input handling and permissions; do not delete fields automatically.",
+                                 "https://learn.chatgpt.com/docs/build-skills#optional-metadata",
+                                 line=2 + front.count("\n", 0, match.start()), status="review_required")
+        if not isinstance(data, dict):
+            return
+        if "userConfig" in data:
+            self.add("REVIEW004", "Review user-supplied configuration",
+                     "This configuration declares user inputs. Their consumers and deployment mechanism need review.",
+                     "Map each consumed input to the target configuration mechanism, record required setup without values, and preserve required or optional behavior.",
+                     config_doc, node=("userConfig",), status="review_required")
+        # Inspect native plugin candidates separately from standalone import rules.
+        if path.name == ".mcp.json" and self.route != "standalone-import":
+            servers = data.get("mcpServers", data)
+            if isinstance(servers, dict):
+                prefix = ("mcpServers",) if "mcpServers" in data else ()
+                for key, server in servers.items():
+                    if not isinstance(server, dict):
+                        continue
+                    if "command" in server or "env" in server or "env_vars" in server:
+                        self.add("REVIEW005", "Review MCP launch directory and environment",
+                                 "This MCP configuration contains process or environment settings. Their interpretation depends on the installation route and execution environment.",
+                                 "Verify command, arguments, working directory and credential sources using the MCP recipe. Do not assume shell interpolation or copy secret values into generated files.",
+                                 config_doc, node=prefix + (key,), status="review_required")
+
+    def file_accounting(self):
+        """Account for bounded inventory and skipped paths without declaring parity."""
+        findings = {}
+        for finding in self.findings:
+            findings.setdefault(finding["path"], []).append(finding["id"])
+        skips = {}
+        for skipped in self.skipped:
+            skips.setdefault(skipped["path"], []).append(skipped["reason"])
+        rows = []
+        inventory = {entry["path"]: entry for entry in self.inventory}
+        for path in sorted(set(inventory) | set(skips)):
+            ids, reasons = findings.get(path, []), skips.get(path, [])
+            state = "needs_review" if ids else ("not_checked" if reasons or path not in self.checked else "no_matches")
+            rows.append({"path": path, "sha256": inventory.get(path, {}).get("sha256"),
+                         "scan_status": state, "finding_ids": ids, "coverage_notes": reasons,
+                         "disposition": "not_assessed", "target_paths": [],
+                         "setup_status": "not_assessed", "runtime_validation": "not_run"})
+        return rows
+
     def run(self):
         if not self.root.is_dir():
             raise ValueError("repository path is not a directory")
@@ -381,6 +453,9 @@ class Auditor:
                     self.add("CONFIG001", "JSON configuration requires review", "This file could not be parsed unambiguously. Other files were still scanned; no invalid content was copied into the report.", "Correct the JSON structure and re-run the audit.", "https://www.rfc-editor.org/rfc/rfc8259", line=getattr(error, "lineno", 1), status="review_required")
         for path, raw, sha in files:
             self.path, self.raw, self.sha, self.locations = path, raw, sha, {}
+            if path in parsed:
+                self.locations = parsed[path][1]
+            self.conversion_review(parsed[path][0] if path in parsed else None)
             if path in parsed and isinstance(parsed[path][0], dict):
                 data, self.locations = parsed[path]
                 if Path(path).name == ".mcp.json" and "mcpServers" not in data:
@@ -414,6 +489,7 @@ class Auditor:
             revision = None
         return {"schema_version": 1, "profile": {"target_version": self.version, "install_path": self.route, "preserve_claude": True, "rules_verified_version": PINNED_VERSION},
                 "repository": {"root": str(self.root), "revision": revision}, "inventory": self.inventory,
+                "file_accounting": self.file_accounting(),
                 "findings": sorted(self.findings, key=lambda f: (f["path"], f["line"], f["rule_id"])),
                 "coverage": {"checked_files": sorted(set(self.checked)), "skipped": self.skipped,
                              "unchecked_areas": UNCHECKED, "limits": {"file_bytes": MAX_FILE_BYTES, "total_bytes": MAX_TOTAL_BYTES, "files": MAX_FILES}},
@@ -436,7 +512,11 @@ def markdown(report):
         lines += ["## " + finding["rule_id"] + ": " + finding["title"], "", "Finding ID: `" + finding["id"].replace("`", "") + "`", "", "Location: `" + finding["path"].replace("`", "") + ":" + str(finding["line"]) + "`", "", "Status: " + finding["status"], "", finding["reason"], "", finding["recommendation"], "", "Source: " + finding["sources"][0], ""]
     if not report["findings"]:
         lines += ["No matches for the implemented rules. Unchecked areas still require review.", ""]
-    lines += ["## Coverage limits", ""] + ["- " + s for s in report["coverage"]["unchecked_areas"]]
+    lines += ["## File coverage", "", "Every inventoried file and skipped path is listed below. Excluded directory contents and files beyond scan limits are not enumerated. No matches means only that the implemented checks found no matches; conversion disposition remains unassessed.", "", "| Source path | Scan result | Conversion |", "| --- | --- | --- |"]
+    for row in report.get("file_accounting", []):
+        safe = row["path"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("|", "&#124;").replace("`", "&#96;").replace("\n", " ").replace("\r", " ")
+        lines.append("| " + safe + " | " + row["scan_status"] + " | not assessed |")
+    lines += ["", "## Coverage limits", ""] + ["- " + s for s in report["coverage"]["unchecked_areas"]]
     lines += ["", "Skipped paths: " + str(len(report["coverage"]["skipped"])) + ". See JSON for details.", ""]
     return "\n".join(lines)
 

@@ -1,7 +1,7 @@
 # Verification record
 
-Version: `0.2.0`
-Checked: September 8, 2026  
+Version: `0.3.0`
+Checked: September 9, 2026  
 Result: local prototype checks passed. Customer repository and client execution tests remain outstanding.
 
 ## Completed checks
@@ -12,7 +12,8 @@ Result: local prototype checks passed. Customer repository and client execution 
 | Independent scanner regressions | 14 passed, including public-marketplace coverage and command-size cases. |
 | Change application tests | 29 passed, covering dry runs, exact changes, stale source, path boundaries and write failure recovery. |
 | Migration selection tests | 20 passed, covering whole-plan, plugin and item selection, exclusions, dependencies, shared effects, conflicts, report output and application. |
-| Total automated tests | **106 passed** on Python 3.9.6. |
+| Conversion review and package workflow | 8 passed: conditional candidates, secret omission, file accounting, escaped report paths, selected package creation, unchanged source and stale-source refusal. |
+| Total automated tests | **114 passed** on Python 3.9.6. |
 | Plugin structure | Built-in plugin validator passed. |
 | Skill format | Built-in skill validator passed for both skills. |
 | Rule verification | Reviewed against the pinned Codex implementation and primary documentation linked in the rule reference. |
@@ -94,3 +95,13 @@ Plugin Bridge 0.2.0 was installed and enabled in a local Codex environment. Both
 - Authentication or OAuth refresh-token rotation tests.
 
 Before wider distribution, pilot on a small set of real repositories, including plugins already working in both clients. Record incorrect findings and missed issues, verify the exact installation paths, and run representative workflows separately in each client.
+
+## Version 0.3.0 conversion guidance and accounting
+
+Added five conditional review rules for packaging, agent definitions, selected skill frontmatter, user-input declarations and native MCP launch/environment settings. These locate work for contextual review; they do not certify field mappings. The scanner now emits a per-file accounting table and names skipped paths, with explicit limits for excluded directories and scan bounds. Conversion disposition remains unassessed until reviewed.
+
+The skills now include detailed conversion recipes, a generated-package option that preserves the selective workflow, and a conversion report with separate setup tasks. The package option uses the existing exact-change helpers; it is not an unattended converter or binary packager.
+
+Eight new automated tests passed alongside the original 106. A synthetic two-plugin test selected only one generated text package, verified every original file stayed unchanged, and refused a stale-source write. This tests the application workflow, not the target plugin loader or agent interpretation. Both skill validators and the plugin validator passed, and relative documentation links resolved. No customer material or customer-specific names were added.
+
+The new recipes were checked against the linked official skill/configuration documentation and pinned role/native-MCP loaders. The teammate's separate migration reference was unavailable; its unverified mappings were not imported as facts. Runtime validation in Codex and Claude remains outstanding.

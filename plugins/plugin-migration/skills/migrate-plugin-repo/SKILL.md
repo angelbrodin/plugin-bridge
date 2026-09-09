@@ -15,6 +15,10 @@ Resolve names against the catalog. If two plugins share a name, ask for the inte
 
 Prepare required dependencies inside the user's selected plugin or whole-plan scope. Never silently include a dependency outside that scope. A selected item that changes a shared file may affect other plugins: explain the concrete effect and request expanded scope only if existing authorization does not cover it. Do not bypass an explicit exclusion. Continue independent changes while a decision is pending.
 
+## Choose the output mode
+
+Keep selective repository edits as the default. For an explicitly requested generated Codex package, follow [package output](../../references/package-output.md) with the same plugin/item selection, exclusions, review and freshness controls. Preserve the Claude source and record how outputs can be regenerated. One repository can supply both clients, but verify their marketplace manifests and source paths separately.
+
 ## Start from reviewed source
 
 Use a fresh audit for the exact repository, revision, version and installation method. If no audit exists, follow `../audit-plugin-repo/SKILL.md`. A request to audit and fix authorizes both passes. If the repository changed, re-audit before generating the plan.
@@ -24,6 +28,8 @@ Use an isolated working branch or worktree and leave unrelated user edits intact
 Audit the actual working copy before preparing edits so the report root and file hashes match the target. Editing the path in an old report is not a fresh audit. Keep reports and plans outside the audited copy, and compare the final changes against its recorded baseline.
 
 Resolve each selected candidate using its source context and exact client behavior. A regex match or old report is not sufficient proof. If target details remain unknown, make only changes justified independently of that uncertainty; leave dependent changes proposed. Do not invent tool names, schemas, provider endpoints or equivalent hook events.
+
+Read the relevant [conversion recipes](../../references/conversion-recipes.md) before changing agents, skill metadata, MCP launch settings or credentials. Ask once for repeated identical semantic decisions, state their scope, and reuse the answer. Known setup work can be recorded while independent conversion continues.
 
 ## Preserve the workflow
 
@@ -46,6 +52,8 @@ After applying, inspect the diff, run a fresh audit and relevant structural test
 Refresh the catalog against the new audit before a later selection. Preserve stable item IDs and the previous receipts, but regenerate remaining patches and hashes against current source. Verify the actual applied content and receipt before carrying forward `applied` or `verified` dependencies. Never replay the old plan or overwrite audit history.
 
 ## Handoff
+
+Complete [file accounting and setup](../../references/file-accounting.md), including unchanged, copied, modified, unselected and blocked files. Deliver a conversion summary and concrete pending setup tasks alongside the updated selectable migration plan.
 
 Report changes, verification and gaps separately. Use `static checks passed`, `installation checked`, `Codex workflow tested`, and `Claude workflow tested` only for work completed. A patch or scanner run is not an end-to-end test.
 
